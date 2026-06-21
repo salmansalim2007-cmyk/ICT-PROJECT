@@ -1,0 +1,96 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamer Churn Prediction</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h1 { color: #333; text-align: center; margin-bottom: 30px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: bold; }
+        input[type="number"] { width: calc(100% - 22px); padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background-color: #007bff; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 20px; }
+        button:hover { background-color: #0056b3; }
+        #predictionResult { margin-top: 30px; padding: 15px; border-radius: 5px; border: 1px solid #ccc; background-color: #e9ecef; text-align: center; }
+        #predictionResult p { margin: 5px 0; font-size: 1.1em; color: #333; }
+        .churn { color: #dc3545; font-weight: bold; }
+        .no-churn { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gamer Churn Prediction</h1>
+        <form id="predictionForm">
+            <div class="form-group">
+                <label for="player_level">Player Level:</label>
+                <input type="number" id="player_level" name="player_level" value="50" required>
+            </div>
+            <div class="form-group">
+                <label for="average_session_length_mins">Average Session Length (Mins):</label>
+                <input type="number" id="average_session_length_mins" name="average_session_length_mins" step="0.1" value="60.5" required>
+            </div>
+            <div class="form-group">
+                <label for="login_frequency_last_14_days">Login Frequency (Last 14 Days):</label>
+                <input type="number" id="login_frequency_last_14_days" name="login_frequency_last_14_days" value="7" required>
+            </div>
+            <div class="form-group">
+                <label for="days_since_last_login">Days Since Last Login:</label>
+                <input type="number" id="days_since_last_login" name="days_since_last_login" value="3" required>
+            </div>
+            <div class="form-group">
+                <label for="in_app_purchases_usd">In-App Purchases (USD):</label>
+                <input type="number" id="in_app_purchases_usd" name="in_app_purchases_usd" step="0.01" value="25.00" required>
+            </div>
+            <div class="form-group">
+                <label for="failed_level_attempts">Failed Level Attempts:</label>
+                <input type="number" id="failed_level_attempts" name="failed_level_attempts" value="10" required>
+            </div>
+            <div class="form-group">
+                <label for="support_tickets_raised">Support Tickets Raised:</label>
+                <input type="number" id="support_tickets_raised" name="support_tickets_raised" value="1" required>
+            </div>
+            <button type="submit">Get Churn Prediction</button>
+        </form>
+
+        <div id="predictionResult" style="display:none;">
+            <p><strong>Prediction:</strong> <span id="predictionText"></span></p>
+            <p><strong>Churn Probability:</strong> <span id="probabilityText"></span></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+
+            const predictionResultDiv = document.getElementById('predictionResult');
+            const predictionTextSpan = document.getElementById('predictionText');
+            const probabilityTextSpan = document.getElementById('probabilityText');
+
+            if (result.error) {
+                predictionTextSpan.textContent = `Error: ${result.error}`;
+                probabilityTextSpan.textContent = '';
+                predictionTextSpan.className = 'churn'; 
+            } else {
+                predictionTextSpan.textContent = result.message;
+                probabilityTextSpan.textContent = `${(result.probability * 100).toFixed(2)}%`;
+
+                if (result.prediction === 1) {
+                    predictionTextSpan.className = 'churn';
+                } else {
+                    predictionTextSpan.className = 'no-churn';
+                }
+            }
+            predictionResultDiv.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
